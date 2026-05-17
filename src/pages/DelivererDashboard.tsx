@@ -50,30 +50,38 @@ export default function DelivererDashboard() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+      <header className="bg-gradient-to-r from-primary-600 to-primary-700 shadow-lg sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 py-5">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">PEPOS CAKE - Domiciliario</h1>
-              <p className="text-sm text-gray-600">{user?.full_name}</p>
+            <div className="flex items-center gap-4">
+              <img
+                src="/assets/logo-circular.jpeg"
+                alt="Pepos Cake"
+                className="w-14 h-14 rounded-full shadow-lg border-2 border-white object-cover"
+              />
+              <div>
+                <h1 className="text-2xl font-bold text-white">PEPOS CAKE</h1>
+                <p className="text-primary-100 text-sm">{user?.full_name}</p>
+              </div>
             </div>
 
             <div className="flex items-center gap-3">
               <button
                 onClick={handleToggleTracking}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold transition shadow-md ${
                   trackingActive
-                    ? 'bg-success-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 <Navigation className="w-4 h-4" />
-                {trackingActive ? 'Rastreando' : 'Inactivo'}
+                {trackingActive ? '🟢 Rastreando' : '⚪ Inactivo'}
               </button>
 
               <button
                 onClick={handleLogout}
-                className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"
+                className="p-2.5 hover:bg-primary-700 rounded-lg transition text-white"
+                title="Cerrar sesión"
               >
                 <LogOut className="w-5 h-5" />
               </button>
@@ -81,20 +89,20 @@ export default function DelivererDashboard() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-4 border-t border-gray-200 pt-4">
+          <div className="flex gap-1 border-t border-primary-500 pt-0">
             {(['orders', 'map', 'location'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 font-medium text-sm transition ${
+                className={`px-5 py-3 font-semibold text-sm transition border-b-2 ${
                   activeTab === tab
-                    ? 'text-primary-600 border-b-2 border-primary-600'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'text-white border-white bg-primary-700/50'
+                    : 'text-primary-100 border-transparent hover:text-white hover:bg-primary-700/30'
                 }`}
               >
-                {tab === 'orders' && 'Mis Pedidos'}
-                {tab === 'map' && 'Mi Ubicación'}
-                {tab === 'location' && 'Historial'}
+                {tab === 'orders' && '📦 Mis Pedidos'}
+                {tab === 'map' && '🗺️ Mi Ubicación'}
+                {tab === 'location' && '📍 Historial'}
               </button>
             ))}
           </div>

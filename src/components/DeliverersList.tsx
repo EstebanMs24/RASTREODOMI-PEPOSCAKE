@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/config/supabase'
-import { Trash2, Eye, EyeOff, Copy, Check } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 
 interface Deliverer {
   id: string
@@ -15,8 +15,6 @@ export default function DeliverersList() {
   const [deliverers, setDeliverers] = useState<Deliverer[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set())
-  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchDeliverers()
@@ -87,21 +85,6 @@ export default function DeliverersList() {
     }
   }
 
-  const togglePasswordVisibility = (id: string) => {
-    const newVisible = new Set(visiblePasswords)
-    if (newVisible.has(id)) {
-      newVisible.delete(id)
-    } else {
-      newVisible.add(id)
-    }
-    setVisiblePasswords(newVisible)
-  }
-
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedId(id)
-    setTimeout(() => setCopiedId(null), 2000)
-  }
 
   if (loading) {
     return (

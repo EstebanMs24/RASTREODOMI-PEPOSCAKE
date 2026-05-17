@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth'
 import { useOrdersStore } from '@/stores/orders'
 import { useMapStore } from '@/stores/map'
@@ -16,7 +16,7 @@ import { LogOut, Menu } from 'lucide-react'
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
-  const { fetchOrders, fetchStats, subscribeToOrders, orders, stats } = useOrdersStore()
+  const { fetchOrders, fetchStats, subscribeToOrders, stats } = useOrdersStore()
   const { fetchLocations, subscribeToLocations } = useMapStore()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'map' | 'orders' | 'stats' | 'deliverers' | 'reports' | 'analytics'>('map')
@@ -69,7 +69,7 @@ export default function AdminDashboard() {
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <header className="bg-gradient-to-r from-primary-600 to-primary-700 shadow-lg">
-          <div className="flex items-center justify-between px-6 py-5">
+          <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -77,9 +77,14 @@ export default function AdminDashboard() {
               >
                 <Menu className="w-6 h-6" />
               </button>
+              <img
+                src="/assets/logo-horizontal.jpeg"
+                alt="Pepos Cake"
+                className="h-10 object-cover"
+              />
               <div>
-                <h1 className="text-2xl font-bold text-white">🍰 PEPOS CAKE</h1>
-                <p className="text-primary-100 text-xs">Centro de Control de Domiciliarios</p>
+                <p className="text-primary-100 text-xs font-semibold">Centro de Control</p>
+                <p className="text-primary-50 text-xs">Gesión en Tiempo Real</p>
               </div>
             </div>
 

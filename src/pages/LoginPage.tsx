@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth'
-import { Mail, Lock, Bike } from 'lucide-react'
+import { Mail, Lock } from 'lucide-react'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -36,17 +36,27 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-500 via-primary-600 to-primary-800 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Decorative elements */}
+      {/* Decorative background */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-pepos-coral rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+
+      {/* Decorative logo background */}
+      <div className="absolute top-10 left-10 opacity-10 w-40 h-40">
+        <img src="/assets/logo-circular.jpeg" alt="" className="w-full h-full rounded-full object-cover" />
+      </div>
+      <div className="absolute bottom-10 right-10 opacity-10 w-32 h-32">
+        <img src="/assets/logo-circular.jpeg" alt="" className="w-full h-full rounded-full object-cover" />
+      </div>
 
       <div className="w-full max-w-md relative z-10">
         <div className="bg-white rounded-3xl shadow-2xl p-8 backdrop-blur-sm">
           {/* Logo */}
           <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center shadow-lg">
-              <Bike className="w-10 h-10 text-white" />
-            </div>
+            <img
+              src="/assets/logo-circular.jpeg"
+              alt="Pepos Cake"
+              className="w-28 h-28 rounded-full shadow-2xl border-4 border-white object-cover"
+            />
           </div>
 
           <h1 className="text-3xl font-bold text-center text-gray-900 mb-1">

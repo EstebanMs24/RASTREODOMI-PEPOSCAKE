@@ -1,4 +1,4 @@
-import { X, Map, Package, BarChart3, Users, Bike } from 'lucide-react'
+import { X, Map, Package, BarChart3, Users } from 'lucide-react'
 
 interface SidebarProps {
   isOpen: boolean
@@ -39,12 +39,17 @@ export default function Sidebar({ isOpen, onClose, activeTab, onTabChange }: Sid
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-gray-700 bg-gradient-to-r from-pepos-navy to-gray-900">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center">
-              <Bike className="w-6 h-6 text-white" />
+            <img
+              src="/assets/logo-circular.jpeg"
+              alt="Pepos Cake"
+              className="w-12 h-12 rounded-full shadow-lg border-2 border-primary-400 object-cover"
+            />
+            <div>
+              <h2 className="text-sm font-bold text-white">PEPOS</h2>
+              <p className="text-xs text-primary-300">Entregas</p>
             </div>
-            <h2 className="text-lg font-bold text-white">PEPOS</h2>
           </div>
           <button onClick={onClose} className="lg:hidden p-1 hover:bg-gray-800 rounded-lg transition">
             <X className="w-5 h-5 text-white" />
