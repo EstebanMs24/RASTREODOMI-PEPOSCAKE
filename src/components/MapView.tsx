@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMapStore } from '@/stores/map'
-import { MapPin, AlertCircle } from 'lucide-react'
+import { MapPin, AlertCircle, Flame } from 'lucide-react'
 
 declare global {
   interface Window {
@@ -12,15 +12,16 @@ export default function MapView() {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<Map<string, any>>(new Map())
-  const { markers, error } = useMapStore()
+  const heatmapRef = useRef<any>(null)
+  const [heatmapActive, setHeatmapActive] = useState(false)
+  const { markers, locations, error } = useMapStore()
 
   useEffect(() => {
     if (!mapRef.current) return
 
-    // Initialize Google Map
     const mapInstance = new window.google.maps.Map(mapRef.current, {
       zoom: 13,
-      center: { lat: 4.7110, lng: -74.0721 }, // Bogotá, Colombia
+      center: { lat: 6.2176, lng: -75.5453 },
       mapTypeId: 'roadmap',
       streetViewControl: false,
       fullscreenControl: false,
@@ -36,60 +37,90 @@ export default function MapView() {
   useEffect(() => {
     if (!mapInstanceRef.current) return
 
-    // Update or create markers
-    const currentMarkerIds = new Set<string>()
+    if (heatmapActive) {
+      // Crear heatmap
+      const heatmapData = Array.from(locations.values()).map(loc => ({
+        location: new window.google.maps.LatLng(loc.latitude, loc.longitude),
+        weight: 1,
+      }))
 
-    markers.forEach(marker => {
-      currentMarkerIds.add(marker.id)
+      // Limpiar marcadores
+      markersRef.current.forEach(marker => marker.setMap(null))
+      markersRef.current.clear()
 
-      const position = { lat: marker.latitude, lng: marker.longitude }
+      // Eliminar heatmap anterior si existe
+      if (heatmapRef.current) {
+        heatmapRef.current.setMap(null)
+      }
 
-      if (markersRef.current.has(marker.id)) {
-        // Update existing marker position
-        markersRef.current.get(marker.id).setPosition(position)
-      } else {
-        // Create new marker
-        const newMarker = new window.google.maps.Marker({
-          position,
+      // Crear nuevo heatmap
+      if (heatmapData.length > 0) {
+        heatmapRef.current = new window.google.maps.visualization.HeatmapLayer({
+          data: heatmapData,
           map: mapInstanceRef.current,
-          title: marker.user_name,
-          icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            scale: 12,
-            fillColor: marker.status === 'active' ? '#22c55e' : '#ef4444',
-            fillOpacity: 1,
-            strokeColor: '#fff',
-            strokeWeight: 2,
-          },
+          radius: 30,
+          opacity: 0.8,
         })
-
-        const infoWindow = new window.google.maps.InfoWindow({
-          content: `
-            <div class="p-2">
-              <h3 class="font-bold">${marker.user_name}</h3>
-              <p class="text-sm">Pedidos: ${marker.orders_count}</p>
-              <p class="text-xs text-gray-600">${new Date(marker.last_update).toLocaleTimeString()}</p>
-            </div>
-          `,
-        })
-
-        newMarker.addListener('click', () => {
-          infoWindow.open(mapInstanceRef.current, newMarker)
-        })
-
-        markersRef.current.set(marker.id, newMarker)
       }
-    })
-
-    // Remove markers not in current list
-    markersRef.current.forEach((marker, id) => {
-      if (!currentMarkerIds.has(id)) {
-        marker.setMap(null)
-        markersRef.current.delete(id)
+    } else {
+      // Eliminar heatmap
+      if (heatmapRef.current) {
+        heatmapRef.current.setMap(null)
+        heatmapRef.current = null
       }
-    })
 
-    // Center map on markers
+      // Mostrar marcadores
+      const currentMarkerIds = new Set<string>()
+
+      markers.forEach(marker => {
+        currentMarkerIds.add(marker.id)
+
+        const position = { lat: marker.latitude, lng: marker.longitude }
+
+        if (markersRef.current.has(marker.id)) {
+          markersRef.current.get(marker.id).setPosition(position)
+        } else {
+          const newMarker = new window.google.maps.Marker({
+            position,
+            map: mapInstanceRef.current,
+            title: marker.user_name,
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              scale: 12,
+              fillColor: marker.status === 'active' ? '#4ECDC4' : '#FF6B6B',
+              fillOpacity: 1,
+              strokeColor: '#fff',
+              strokeWeight: 2,
+            },
+          })
+
+          const infoWindow = new window.google.maps.InfoWindow({
+            content: `
+              <div class="p-3 text-sm">
+                <h3 class="font-bold text-gray-900">${marker.user_name}</h3>
+                <p class="text-gray-600">📦 Pedidos: ${marker.orders_count}</p>
+                <p class="text-xs text-gray-500">⏰ ${new Date(marker.last_update).toLocaleTimeString()}</p>
+              </div>
+            `,
+          })
+
+          newMarker.addListener('click', () => {
+            infoWindow.open(mapInstanceRef.current, newMarker)
+          })
+
+          markersRef.current.set(marker.id, newMarker)
+        }
+      })
+
+      markersRef.current.forEach((marker, id) => {
+        if (!currentMarkerIds.has(id)) {
+          marker.setMap(null)
+          markersRef.current.delete(id)
+        }
+      })
+    }
+
+    // Center map
     if (markers.length > 0) {
       const bounds = new window.google.maps.LatLngBounds()
       markers.forEach(m => {
@@ -97,36 +128,59 @@ export default function MapView() {
       })
       mapInstanceRef.current.fitBounds(bounds, 50)
     }
-  }, [markers])
+  }, [markers, heatmapActive, locations])
 
   return (
     <div className="p-6">
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="h-96 md:h-[600px]" ref={mapRef}>
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="relative h-96 md:h-[600px]" ref={mapRef}>
           {error && (
-            <div className="h-full flex items-center justify-center bg-gray-50">
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
               <div className="text-center">
                 <AlertCircle className="w-12 h-12 text-danger-600 mx-auto mb-4" />
                 <p className="text-gray-600">{error}</p>
               </div>
             </div>
           )}
+
+          {/* Heatmap Toggle Button */}
+          <button
+            onClick={() => setHeatmapActive(!heatmapActive)}
+            className={`absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-lg font-semibold shadow-lg transition duration-200 ${
+              heatmapActive
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <Flame className="w-5 h-5" />
+            {heatmapActive ? 'Marcadores' : 'Mapa de Calor'}
+          </button>
         </div>
 
         {/* Legend */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
-          <div className="flex items-center gap-6 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-success-500"></div>
-              <span>Activos</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-danger-500"></div>
-              <span>Inactivos</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-gray-600" />
-              <span>{markers.length} domiciliarios rastreados</span>
+        <div className="p-5 border-t-2 border-gray-200 bg-gradient-to-r from-gray-50 to-primary-50">
+          <div className="flex flex-wrap items-center gap-6 text-sm font-medium">
+            {!heatmapActive && (
+              <>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#4ECDC4' }}></div>
+                  <span className="text-gray-700">🟢 Activos</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#FF6B6B' }}></div>
+                  <span className="text-gray-700">🔴 Inactivos</span>
+                </div>
+              </>
+            )}
+            {heatmapActive && (
+              <div className="flex items-center gap-2">
+                <Flame className="w-4 h-4 text-orange-500" />
+                <span className="text-gray-700">Densidad de Movimiento</span>
+              </div>
+            )}
+            <div className="ml-auto flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-primary-600" />
+              <span className="text-primary-700 font-semibold">{markers.length} domiciliarios</span>
             </div>
           </div>
         </div>

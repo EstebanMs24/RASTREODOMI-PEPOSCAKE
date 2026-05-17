@@ -1,16 +1,26 @@
-import { X, BarChart3, Package, AlertCircle } from 'lucide-react'
+import { X, Map, Package, BarChart3, Users, Bike } from 'lucide-react'
 
 interface SidebarProps {
   isOpen: boolean
   onClose: () => void
+  activeTab: 'map' | 'orders' | 'stats' | 'deliverers' | 'reports' | 'analytics'
+  onTabChange: (tab: 'map' | 'orders' | 'stats' | 'deliverers' | 'reports' | 'analytics') => void
 }
 
-export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+export default function Sidebar({ isOpen, onClose, activeTab, onTabChange }: SidebarProps) {
   const menuItems = [
-    { icon: BarChart3, label: 'Dashboard', href: '#' },
-    { icon: Package, label: 'Pedidos', href: '#' },
-    { icon: AlertCircle, label: 'Incidencias', href: '#' },
+    { icon: Map, label: 'Mapa en Vivo', tab: 'map' as const, emoji: '🗺️' },
+    { icon: Package, label: 'Pedidos', tab: 'orders' as const, emoji: '📦' },
+    { icon: BarChart3, label: 'Estadísticas', tab: 'stats' as const, emoji: '📊' },
+    { icon: BarChart3, label: 'Reportes', tab: 'reports' as const, emoji: '📈' },
+    { icon: BarChart3, label: 'Analytics', tab: 'analytics' as const, emoji: '📉' },
+    { icon: Users, label: 'Domiciliarios', tab: 'deliverers' as const, emoji: '👥' },
   ]
+
+  const handleTabClick = (tab: 'map' | 'orders' | 'stats' | 'deliverers' | 'reports' | 'analytics') => {
+    onTabChange(tab)
+    onClose()
+  }
 
   return (
     <>
@@ -24,29 +34,50 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 shadow-lg transform transition duration-300 lg:relative lg:translate-x-0 z-40 ${
+        className={`fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-pepos-navy to-gray-900 border-r border-gray-800 shadow-2xl transform transition duration-300 lg:relative lg:translate-x-0 z-40 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">Menú</h2>
-          <button onClick={onClose} className="lg:hidden p-1 hover:bg-gray-100 rounded">
-            <X className="w-5 h-5" />
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center">
+              <Bike className="w-6 h-6 text-white" />
+            </div>
+            <h2 className="text-lg font-bold text-white">PEPOS</h2>
+          </div>
+          <button onClick={onClose} className="lg:hidden p-1 hover:bg-gray-800 rounded-lg transition">
+            <X className="w-5 h-5 text-white" />
           </button>
         </div>
 
-        <nav className="p-4 space-y-2">
+        {/* Navigation */}
+        <nav className="p-3 space-y-2">
           {menuItems.map((item) => (
-            <a
+            <button
               key={item.label}
-              href={item.href}
-              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+              onClick={() => handleTabClick(item.tab)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition duration-200 ${
+                activeTab === item.tab
+                  ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold shadow-lg'
+                  : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'
+              }`}
             >
-              <item.icon className="w-5 h-5" />
+              <span className="text-lg">{item.emoji}</span>
               <span>{item.label}</span>
-            </a>
+              {activeTab === item.tab && (
+                <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
+              )}
+            </button>
           ))}
         </nav>
+
+        {/* Footer */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700 bg-gradient-to-t from-pepos-navy to-transparent">
+          <p className="text-xs text-gray-400 text-center font-medium">
+            ✨ Gestión de Entregas<br/>en Tiempo Real
+          </p>
+        </div>
       </aside>
     </>
   )

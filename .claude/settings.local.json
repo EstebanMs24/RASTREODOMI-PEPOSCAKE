@@ -5,7 +5,20 @@
       "Bash(git add *)",
       "Bash(git commit -m 'Initial commit: PEPOS CAKE logistics platform base *)",
       "Bash(git commit -m 'Add project deliverables summary *)",
-      "Bash(npm --version)"
+      "Bash(npm --version)",
+      "mcp__claude_ai_Supabase__execute_sql",
+      "Bash(npm install *)",
+      "Bash(npx supabase *)",
+      "PowerShell(cd \"c:\\\\Users\\\\user\\\\Desktop\\\\Pruebas IA\\\\RASTREO-DOMIPEPOS\"; $env:SUPABASE_ACCESS_TOKEN = \"sbp_8686dcfd5af3124fedc4cb70d7873065722970ff\"; npx supabase functions deploy create-deliverer)",
+      "PowerShell(cd \"c:\\\\Users\\\\user\\\\Desktop\\\\Pruebas IA\\\\RASTREO-DOMIPEPOS\"; $env:SUPABASE_ACCESS_TOKEN = \"sbp_8686dcfd5af3124fedc4cb70d7873065722970ff\"; npx supabase link --project-ref pyhujdmsicwvgftodatk)",
+      "PowerShell(cd \"c:\\\\Users\\\\user\\\\Desktop\\\\Pruebas IA\\\\RASTREO-DOMIPEPOS\"; $env:SUPABASE_ACCESS_TOKEN = \"sbp_a66bab519f47342946399e5742cffb5daa3609e9\"; npx supabase functions deploy create-deliverer)",
+      "mcp__claude_ai_Supabase__list_tables",
+      "mcp__claude_ai_Supabase__apply_migration",
+      "Bash(supabase migration *)",
+      "PowerShell(supabase --version)",
+      "mcp__claude_ai_Supabase__get_project",
+      "Bash(npm run *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

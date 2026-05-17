@@ -167,13 +167,14 @@ export const useOrdersStore = create<OrdersState>((set, get) => ({
 
   subscribeToOrders: (callback) => {
     const subscription = supabase
+      .channel('orders_channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
         callback(payload.new)
       })
       .subscribe()
 
     return () => {
-      supabase.removeChannel(subscription)
+      subscription.unsubscribe()
     }
   },
 }))

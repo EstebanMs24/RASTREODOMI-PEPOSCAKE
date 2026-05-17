@@ -11,7 +11,36 @@ function App() {
 
   useEffect(() => {
     fetchUser()
-  }, [])
+  }, [fetchUser])
+
+  const renderRoutes = () => (
+    <Routes>
+      <Route path="/login" element={!user ? <LoginPage /> : <Navigate to={user.role === 'admin' ? '/admin' : '/deliverer'} />} />
+      <Route
+        path="/admin/*"
+        element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/login" />}
+      />
+      <Route
+        path="/deliverer/*"
+        element={user?.role === 'deliverer' ? <DelivererDashboard /> : <Navigate to="/login" />}
+      />
+      <Route
+        path="/"
+        element={
+          user ? (
+            user.role === 'admin' ? (
+              <Navigate to="/admin" />
+            ) : (
+              <Navigate to="/deliverer" />
+            )
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  )
 
   if (loading) {
     return (
@@ -27,32 +56,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/admin/*"
-          element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/deliverer/*"
-          element={user?.role === 'deliverer' ? <DelivererDashboard /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/"
-          element={
-            user ? (
-              user.role === 'admin' ? (
-                <Navigate to="/admin" />
-              ) : (
-                <Navigate to="/deliverer" />
-              )
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+      {renderRoutes()}
     </BrowserRouter>
   )
 }

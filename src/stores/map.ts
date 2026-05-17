@@ -95,6 +95,7 @@ export const useMapStore = create<MapState>((set) => {
 
     subscribeToLocations: (callback) => {
       const subscription = supabase
+        .channel('locations_channel')
         .on('postgres_changes', {
           event: 'INSERT',
           schema: 'public',
@@ -110,7 +111,7 @@ export const useMapStore = create<MapState>((set) => {
         .subscribe()
 
       return () => {
-        supabase.removeChannel(subscription)
+        subscription.unsubscribe()
       }
     },
 

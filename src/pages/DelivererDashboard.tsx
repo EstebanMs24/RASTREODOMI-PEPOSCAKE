@@ -5,6 +5,7 @@ import { useOrdersStore } from '@/stores/orders'
 import { useMapStore } from '@/stores/map'
 import DeliveryOrders from '@/components/DeliveryOrders'
 import DeliveryMap from '@/components/DeliveryMap'
+import DeliveryLocationStatus from '@/components/DeliveryLocationStatus'
 import { LogOut, Navigation } from 'lucide-react'
 
 export default function DelivererDashboard() {
@@ -12,7 +13,7 @@ export default function DelivererDashboard() {
   const { user, logout } = useAuthStore()
   const { fetchOrdersForDeliverer, subscribeToOrders } = useOrdersStore()
   const { startTracking, stopTracking, trackingActive } = useMapStore()
-  const [activeTab, setActiveTab] = useState<'orders' | 'map'>('orders')
+  const [activeTab, setActiveTab] = useState<'orders' | 'map' | 'location'>('orders')
 
   useEffect(() => {
     if (user?.id) {
@@ -81,7 +82,7 @@ export default function DelivererDashboard() {
 
           {/* Tabs */}
           <div className="flex gap-4 border-t border-gray-200 pt-4">
-            {(['orders', 'map'] as const).map(tab => (
+            {(['orders', 'map', 'location'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -93,6 +94,7 @@ export default function DelivererDashboard() {
               >
                 {tab === 'orders' && 'Mis Pedidos'}
                 {tab === 'map' && 'Mi Ubicación'}
+                {tab === 'location' && 'Historial'}
               </button>
             ))}
           </div>
@@ -103,6 +105,7 @@ export default function DelivererDashboard() {
       <main className="flex-1 overflow-auto max-w-7xl mx-auto w-full">
         {activeTab === 'orders' && <DeliveryOrders />}
         {activeTab === 'map' && <DeliveryMap />}
+        {activeTab === 'location' && <DeliveryLocationStatus />}
       </main>
     </div>
   )

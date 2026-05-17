@@ -1,16 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth'
-import { Mail, Lock } from 'lucide-react'
+import { Mail, Lock, Bike } from 'lucide-react'
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const { login, loading, error } = useAuthStore()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [userType, setUserType] = useState<'admin' | 'deliverer'>('admin')
+
+  useEffect(() => {
+    setIsSubmitting(false)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmitting || loading) return
+
+    setIsSubmitting(true)
     try {
       await login(email, password)
       const user = useAuthStore.getState().user
@@ -21,77 +30,125 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.error('Login error:', err)
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h1 className="text-4xl font-bold text-center text-gray-900 mb-2">
+    <div className="min-h-screen bg-gradient-to-br from-primary-500 via-primary-600 to-primary-800 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-pepos-coral rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+
+      <div className="w-full max-w-md relative z-10">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 backdrop-blur-sm">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center shadow-lg">
+              <Bike className="w-10 h-10 text-white" />
+            </div>
+          </div>
+
+          <h1 className="text-3xl font-bold text-center text-gray-900 mb-1">
             PEPOS CAKE
           </h1>
-          <p className="text-center text-gray-600 mb-8">
-            Sistema de Gestión de Domiciliarios
+          <p className="text-center text-primary-600 font-semibold mb-8 text-sm">
+            Gestión de Domiciliarios en Tiempo Real
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {/* User Type Tabs */}
+          <div className="flex gap-3 mb-8 bg-gray-100 p-1.5 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setUserType('admin')}
+              className={`flex-1 py-2.5 rounded-lg font-semibold transition duration-300 ${
+                userType === 'admin'
+                  ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md'
+                  : 'bg-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              👨‍💼 Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => setUserType('deliverer')}
+              className={`flex-1 py-2.5 rounded-lg font-semibold transition duration-300 ${
+                userType === 'deliverer'
+                  ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md'
+                  : 'bg-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              🚴 Domiciliario
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
+              <label className="block text-sm font-semibold text-gray-800 mb-2">
+                📧 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
+                <Mail className="absolute left-3 top-3.5 text-primary-500 w-5 h-5" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@email.com"
-                  className="input-field pl-10"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Contraseña
+              <label className="block text-sm font-semibold text-gray-800 mb-2">
+                🔐 Contraseña
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
+                <Lock className="absolute left-3 top-3.5 text-primary-500 w-5 h-5" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="input-field pl-10"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition"
                   required
                 />
               </div>
+              {userType === 'deliverer' && (
+                <p className="text-xs text-gray-500 mt-2">
+                  ℹ️ El admin te compartió esta contraseña cuando te registró
+                </p>
+              )}
             </div>
 
             {error && (
-              <div className="p-3 bg-danger-50 border border-danger-200 rounded-lg text-danger-600 text-sm">
-                {error}
+              <div className="p-4 bg-danger-50 border-2 border-danger-200 rounded-lg text-danger-700 text-sm font-medium">
+                ⚠️ {error}
               </div>
             )}
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full btn-primary py-3 font-semibold disabled:opacity-50"
+              disabled={loading || isSubmitting}
+              className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-3 rounded-lg font-bold shadow-lg hover:shadow-xl hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
             >
-              {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+              {loading || isSubmitting ? '⏳ Iniciando sesión...' : '✓ Iniciar Sesión'}
             </button>
           </form>
 
-          <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-600 text-center font-mono">
-              Demo: admin@pepos.com / demo-password<br/>
-              Demo: deliverer@pepos.com / demo-password
-            </p>
+          <div className="mt-8 p-4 bg-gradient-to-r from-pepos-cream/20 to-pepos-coral/20 rounded-xl border border-pepos-cream/30">
+            <p className="text-xs font-bold text-gray-700 text-center mb-3">📝 Credenciales de Prueba</p>
+            <div className="space-y-2 text-xs text-gray-700 text-center font-mono">
+              <p><strong>Admin:</strong> admin@peposcake.com / admin2026</p>
+              <p><strong>Domiciliario:</strong> usa el email y contraseña del admin</p>
+            </div>
           </div>
         </div>
+
+        <p className="text-center text-white text-xs mt-6 opacity-80">
+          🚀 Gesión inteligente de entregas en tiempo real
+        </p>
       </div>
     </div>
   )
