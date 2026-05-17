@@ -17,7 +17,6 @@ interface MapState {
 
 export const useMapStore = create<MapState>((set) => {
   let watchPositionId: number | null = null
-  let trackingUserId: string | null = null
 
   return {
     locations: new Map(),
@@ -100,11 +99,12 @@ export const useMapStore = create<MapState>((set) => {
           event: 'INSERT',
           schema: 'public',
           table: 'locations',
-        }, (payload) => {
-          callback(payload.new)
+        }, (payload: any) => {
+          const newLocation = payload.new as Location
+          callback(newLocation)
           set(state => {
             const newLocations = new Map(state.locations)
-            newLocations.set(payload.new.id, payload.new)
+            newLocations.set(newLocation.id, newLocation)
             return { locations: newLocations }
           })
         })
@@ -122,7 +122,6 @@ export const useMapStore = create<MapState>((set) => {
       }
 
       set({ trackingActive: true, error: null })
-      trackingUserId = userId
 
       const options = {
         enableHighAccuracy: false,

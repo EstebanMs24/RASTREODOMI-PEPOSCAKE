@@ -20,6 +20,7 @@ export default function AdminDashboard() {
   const { fetchLocations, subscribeToLocations } = useMapStore()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'map' | 'orders' | 'stats' | 'deliverers' | 'reports' | 'analytics'>('map')
+  const [showFormDeliverer, setShowFormDeliverer] = useState(false)
 
   useEffect(() => {
     fetchOrders()
@@ -135,7 +136,25 @@ export default function AdminDashboard() {
           {activeTab === 'analytics' && <AnalyticsDashboard />}
           {activeTab === 'deliverers' && (
             <div className="space-y-6 max-w-6xl">
-              <AddDelivererForm onDelivererAdded={() => fetchOrders()} />
+              {/* Register Button */}
+              <button
+                onClick={() => setShowFormDeliverer(!showFormDeliverer)}
+                className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-3 rounded-xl font-bold shadow-lg hover:shadow-xl hover:from-primary-600 hover:to-primary-700 transition duration-200 flex items-center justify-center gap-2"
+              >
+                {showFormDeliverer ? '✕ Cancelar' : '➕ Registrar Nuevo Domiciliario'}
+              </button>
+
+              {/* Form Animated */}
+              {showFormDeliverer && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                  <AddDelivererForm onDelivererAdded={() => {
+                    fetchOrders()
+                    setShowFormDeliverer(false)
+                  }} />
+                </div>
+              )}
+
+              {/* List */}
               <DeliverersList />
             </div>
           )}

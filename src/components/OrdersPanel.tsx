@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { useOrdersStore } from '@/stores/orders'
-import { useAuthStore } from '@/stores/auth'
 import { Order } from '@/types'
 import { Clock, MapPin, Phone, Edit, Plus } from 'lucide-react'
 
 export default function OrdersPanel() {
-  const { orders, loading, createOrder, assignOrder } = useOrdersStore()
-  const { user } = useAuthStore()
+  const { orders, loading, createOrder } = useOrdersStore()
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
     customer_name: '',

@@ -55,8 +55,9 @@ export default function AddDelivererForm({ onDelivererAdded }: AddDelivererFormP
         throw new Error('La contraseña debe tener al menos 6 caracteres')
       }
 
+      const supabaseUrl = 'https://pyhujdmsicwvgftodatk.supabase.co'
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-deliverer`,
+        `${supabaseUrl}/functions/v1/create-deliverer`,
         {
           method: 'POST',
           headers: {
@@ -77,7 +78,7 @@ export default function AddDelivererForm({ onDelivererAdded }: AddDelivererFormP
         throw new Error(errorData.error || 'Error al crear domiciliario')
       }
 
-      const result: DelivererResponse = await response.json()
+      await response.json() as DelivererResponse
 
       setSuccess(`✓ Domiciliario "${formData.full_name}" creado exitosamente.\n\n📧 Email: ${formData.email}\n🔐 Contraseña: ${formData.password}`)
       setFormData({ full_name: '', phone: '', email: '', password: '' })

@@ -18,7 +18,8 @@
       "PowerShell(supabase --version)",
       "mcp__claude_ai_Supabase__get_project",
       "Bash(npm run *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(xargs grep -l \"Location\\\\|interface Location\")"
     ]
   }
 }

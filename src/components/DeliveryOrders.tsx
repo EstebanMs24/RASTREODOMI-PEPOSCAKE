@@ -1,12 +1,10 @@
 import { useOrdersStore } from '@/stores/orders'
-import { useAuthStore } from '@/stores/auth'
 import { Order } from '@/types'
 import { MapPin, Phone, Clock, CheckCircle, Camera } from 'lucide-react'
 import { useState } from 'react'
 
 export default function DeliveryOrders() {
   const { orders, loading, updateOrderStatus } = useOrdersStore()
-  const { user } = useAuthStore()
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null)
 
   const handleMarkDelivered = async (orderId: string) => {

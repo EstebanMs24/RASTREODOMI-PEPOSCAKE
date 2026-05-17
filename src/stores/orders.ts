@@ -16,7 +16,7 @@ interface OrdersState {
   subscribeToOrders: (callback: (order: Order) => void) => () => void
 }
 
-export const useOrdersStore = create<OrdersState>((set, get) => ({
+export const useOrdersStore = create<OrdersState>((set) => ({
   orders: [],
   loading: false,
   error: null,
@@ -168,8 +168,9 @@ export const useOrdersStore = create<OrdersState>((set, get) => ({
   subscribeToOrders: (callback) => {
     const subscription = supabase
       .channel('orders_channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
-        callback(payload.new)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload: any) => {
+        const newOrder = payload.new as Order
+        callback(newOrder)
       })
       .subscribe()
 

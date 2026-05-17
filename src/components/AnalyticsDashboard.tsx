@@ -4,7 +4,6 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts'
-import { Order } from '@/types'
 
 export default function AnalyticsDashboard() {
   const [hourlyData, setHourlyData] = useState<any[]>([])
@@ -50,9 +49,10 @@ export default function AnalyticsDashboard() {
             cancelled: 0,
           }
 
-          ordersData.forEach((order: Order) => {
-            if (statusCounts[order.status as keyof typeof statusCounts] !== undefined) {
-              statusCounts[order.status as keyof typeof statusCounts]++
+          ordersData.forEach(order => {
+            const status = order.status as keyof typeof statusCounts
+            if (statusCounts[status] !== undefined) {
+              statusCounts[status]++
             }
           })
 

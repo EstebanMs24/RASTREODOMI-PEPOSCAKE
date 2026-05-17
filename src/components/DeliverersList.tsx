@@ -45,17 +45,27 @@ export default function DeliverersList() {
     setLoading(true)
     setError(null)
     try {
+      // Ensure we have a session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+      if (sessionError) throw new Error('No hay sesión activa')
+      if (!session) throw new Error('Debes iniciar sesión para ver domiciliarios')
+
       const { data, error: fetchError } = await supabase
         .from('users')
         .select('id, email, full_name, phone, is_active, created_at')
         .eq('role', 'deliverer')
         .order('created_at', { ascending: false })
 
-      if (fetchError) throw fetchError
+      if (fetchError) {
+        console.error('Fetch error:', fetchError)
+        throw new Error(`Error al cargar domiciliarios: ${fetchError.message}`)
+      }
 
       setDeliverers(data || [])
     } catch (err: any) {
-      setError(err.message || 'Error al cargar domiciliarios')
+      console.error('Error:', err)
+      setError(err.message || 'Error al cargar domiciliarios. Intenta recargar.')
     } finally {
       setLoading(false)
     }
@@ -67,17 +77,27 @@ export default function DeliverersList() {
     }
 
     try {
-      // Delete auth user
-      const { error: authError } = await supabase.auth.admin.deleteUser(id)
-      if (authError) throw authError
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError || !session) throw new Error('No hay sesión activa')
 
-      // Delete user profile (will cascade)
-      const { error: profileError } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', id)
+      // Call Edge Function with proper service role permissions
+      const supabaseUrl = 'https://pyhujdmsicwvgftodatk.supabase.co'
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/delete-deliverer`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ userId: id }),
+        }
+      )
 
-      if (profileError) throw profileError
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Error al eliminar domiciliario')
+      }
 
       setDeliverers((prev) => prev.filter((d) => d.id !== id))
     } catch (err: any) {
