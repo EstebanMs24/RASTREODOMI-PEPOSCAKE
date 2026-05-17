@@ -97,3 +97,16 @@ export interface DeliveryMarker {
   status: 'active' | 'inactive'
   last_update: string
 }
+
+export interface AuditLog {
+  id: string
+  action: string
+  entity_type: string
+  entity_id?: string
+  entity_name?: string
+  performed_by?: string
+  performed_by_name?: string
+  old_value?: string
+  new_value?: string
+  created_at: string
+}

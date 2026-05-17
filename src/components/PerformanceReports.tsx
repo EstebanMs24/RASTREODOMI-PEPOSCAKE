@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/config/supabase'
 import { useAnalyticsStore } from '@/stores/analytics'
-import { MapPin, Clock, Navigation, TrendingUp } from 'lucide-react'
+import { MapPin, Clock, Navigation, TrendingUp, Download } from 'lucide-react'
+import { exportPerformancePDF, exportPerformanceExcel } from '@/utils/exportReports'
 
 interface Deliverer {
   id: string
@@ -13,8 +14,61 @@ export default function PerformanceReports() {
   const [selectedDeliverer, setSelectedDeliverer] = useState<string>('')
   const [days, setDays] = useState<7 | 30 | 1>(1)
   const [loading, setLoading] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   const { delivererAnalytics, fetchDelivererAnalytics } = useAnalyticsStore()
+
+  const handleExportPDF = async () => {
+    if (!analytics) return
+    setExporting(true)
+    try {
+      const deliverer = deliverers.find(d => d.id === selectedDeliverer)
+      const periodLabel = days === 1 ? 'Hoy' : `Últimos ${days} días`
+      const peakHour = analytics.hourlyActivity.length > 0
+        ? `${analytics.hourlyActivity.reduce((max, h) => h.count > max.count ? h : max).hour}:00`
+        : 'N/A'
+      exportPerformancePDF(
+        deliverer?.full_name || 'Domiciliario',
+        periodLabel,
+        {
+          kmTraveled: analytics.totalDistance,
+          activeHours: Math.floor(analytics.activeTime / 60),
+          activeMinutes: analytics.activeTime % 60,
+          zonesVisited: analytics.topZones.length,
+          peakHour: peakHour,
+        },
+        analytics.topZones.map(z => ({ latitude: z.lat, longitude: z.lng, visitCount: z.count }))
+      )
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const handleExportExcel = async () => {
+    if (!analytics) return
+    setExporting(true)
+    try {
+      const deliverer = deliverers.find(d => d.id === selectedDeliverer)
+      const periodLabel = days === 1 ? 'Hoy' : `Últimos ${days} días`
+      const peakHour = analytics.hourlyActivity.length > 0
+        ? `${analytics.hourlyActivity.reduce((max, h) => h.count > max.count ? h : max).hour}:00`
+        : 'N/A'
+      exportPerformanceExcel(
+        deliverer?.full_name || 'Domiciliario',
+        periodLabel,
+        {
+          kmTraveled: analytics.totalDistance,
+          activeHours: Math.floor(analytics.activeTime / 60),
+          activeMinutes: analytics.activeTime % 60,
+          zonesVisited: analytics.topZones.length,
+          peakHour: peakHour,
+        },
+        analytics.topZones.map(z => ({ latitude: z.lat, longitude: z.lng, visitCount: z.count }))
+      )
+    } finally {
+      setExporting(false)
+    }
+  }
 
   useEffect(() => {
     const fetchDeliverers = async () => {
@@ -201,6 +255,28 @@ export default function PerformanceReports() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* Export Buttons */}
+          {analytics.topZones.length > 0 && (
+            <div className="flex gap-3 justify-end mt-6">
+              <button
+                onClick={handleExportPDF}
+                disabled={exporting}
+                className="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 transition font-semibold"
+              >
+                <Download className="w-5 h-5" />
+                {exporting ? 'Descargando PDF...' : '📄 Exportar PDF'}
+              </button>
+              <button
+                onClick={handleExportExcel}
+                disabled={exporting}
+                className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 transition font-semibold"
+              >
+                <Download className="w-5 h-5" />
+                {exporting ? 'Descargando Excel...' : '📊 Exportar Excel'}
+              </button>
             </div>
           )}
         </>

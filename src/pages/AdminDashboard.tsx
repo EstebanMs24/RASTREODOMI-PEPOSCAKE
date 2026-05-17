@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth'
 import { useOrdersStore } from '@/stores/orders'
 import { useMapStore } from '@/stores/map'
@@ -11,7 +12,9 @@ import AddDelivererForm from '@/components/AddDelivererForm'
 import DeliverersList from '@/components/DeliverersList'
 import PerformanceReports from '@/components/PerformanceReports'
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
+import AuditLogView from '@/components/AuditLogView'
 import { LogOut, Menu } from 'lucide-react'
+import { playSound } from '@/utils/sounds'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -19,7 +22,7 @@ export default function AdminDashboard() {
   const { fetchOrders, fetchStats, subscribeToOrders, stats } = useOrdersStore()
   const { fetchLocations, subscribeToLocations } = useMapStore()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<'map' | 'orders' | 'stats' | 'deliverers' | 'reports' | 'analytics'>('map')
+  const [activeTab, setActiveTab] = useState<'map' | 'orders' | 'stats' | 'deliverers' | 'reports' | 'analytics' | 'audit'>('map')
   const [showFormDeliverer, setShowFormDeliverer] = useState(false)
 
   useEffect(() => {
@@ -27,7 +30,22 @@ export default function AdminDashboard() {
     fetchStats()
     fetchLocations()
 
-    const unsubscribeOrders = subscribeToOrders(() => {
+    const unsubscribeOrders = subscribeToOrders((order, eventType) => {
+      if (eventType === 'INSERT') {
+        toast.info(`📦 Nuevo pedido de ${order.customer_name}`, { duration: 3000 })
+        playSound('info')
+      } else if (eventType === 'UPDATE') {
+        if (order.status === 'delivered') {
+          toast.success(`✓ Pedido #${order.order_number} entregado`, { duration: 3000 })
+          playSound('success')
+        } else if (order.status === 'in_route') {
+          toast.info(`📦 Pedido #${order.order_number} en camino`, { duration: 3000 })
+          playSound('info')
+        } else if (order.status === 'cancelled') {
+          toast.error(`Pedido #${order.order_number} cancelado`, { duration: 3000 })
+          playSound('warning')
+        }
+      }
       fetchOrders()
       fetchStats()
     })
@@ -106,7 +124,7 @@ export default function AdminDashboard() {
 
           {/* Tabs */}
           <div className="flex gap-1 px-6 border-t border-primary-500 overflow-x-auto bg-primary-600/50">
-            {(['map', 'orders', 'stats', 'reports', 'analytics', 'deliverers'] as const).map(tab => (
+            {(['map', 'orders', 'stats', 'reports', 'analytics', 'deliverers', 'audit'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -122,6 +140,7 @@ export default function AdminDashboard() {
                 {tab === 'reports' && '📈 Reportes'}
                 {tab === 'analytics' && '📉 Analytics'}
                 {tab === 'deliverers' && '👥 Domiciliarios'}
+                {tab === 'audit' && '📋 Auditoría'}
               </button>
             ))}
           </div>
@@ -158,6 +177,7 @@ export default function AdminDashboard() {
               <DeliverersList />
             </div>
           )}
+          {activeTab === 'audit' && <AuditLogView />}
         </div>
       </div>
     </div>

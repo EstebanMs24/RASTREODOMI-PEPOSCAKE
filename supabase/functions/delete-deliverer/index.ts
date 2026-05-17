@@ -41,6 +41,15 @@ Deno.serve(async (req: Request) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+    // Get user info for audit log
+    const { data: userData, error: userFetchError } = await supabase
+      .from('users')
+      .select('full_name')
+      .eq('id', body.userId)
+      .single()
+
+    const userName = userData?.full_name || body.userId
+
     // Delete user profile first (will cascade if RLS allows)
     const { error: profileError } = await supabase
       .from('users')
@@ -65,6 +74,20 @@ Deno.serve(async (req: Request) => {
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       )
     }
+
+    // Register in audit_logs
+    const { data: { user: currentUser } } = await supabase.auth.admin.getUserById(body.userId)
+
+    await supabase.from('audit_logs').insert([{
+      action: 'delete_deliverer',
+      entity_type: 'deliverer',
+      entity_id: body.userId,
+      entity_name: userName,
+      performed_by: null,
+      performed_by_name: 'Admin API',
+      old_value: 'Activo',
+      new_value: 'Eliminado',
+    }]).catch(() => {}) // Ignorar errores de auditoría
 
     return new Response(
       JSON.stringify({

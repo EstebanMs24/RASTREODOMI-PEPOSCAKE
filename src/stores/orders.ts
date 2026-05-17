@@ -13,7 +13,7 @@ interface OrdersState {
   createOrder: (order: Omit<Order, 'id' | 'created_at' | 'updated_at'>) => Promise<void>
   updateOrderStatus: (orderId: string, status: Order['status']) => Promise<void>
   assignOrder: (orderId: string, userId: string) => Promise<void>
-  subscribeToOrders: (callback: (order: Order) => void) => () => void
+  subscribeToOrders: (callback: (order: Order, eventType: string) => void) => () => void
 }
 
 export const useOrdersStore = create<OrdersState>((set) => ({
@@ -116,6 +116,9 @@ export const useOrdersStore = create<OrdersState>((set) => ({
   updateOrderStatus: async (orderId: string, status: Order['status']) => {
     set({ loading: true, error: null })
     try {
+      const currentOrder = useOrdersStore.getState().orders.find(o => o.id === orderId)
+      const oldStatus = currentOrder?.status
+
       const { error } = await supabase
         .from('orders')
         .update({
@@ -125,6 +128,21 @@ export const useOrdersStore = create<OrdersState>((set) => ({
         .eq('id', orderId)
 
       if (error) throw error
+
+      // Registrar en audit_logs
+      const { data: { user } } = await supabase.auth.getUser()
+      try {
+        await supabase.from('audit_logs').insert([{
+          action: 'order_status_changed',
+          entity_type: 'order',
+          entity_id: orderId,
+          entity_name: `Pedido #${currentOrder?.order_number}`,
+          performed_by: user?.id,
+          performed_by_name: user?.user_metadata?.full_name || user?.email,
+          old_value: oldStatus,
+          new_value: status,
+        }])
+      } catch {}  // Ignorar errores de auditoría
 
       set(state => ({
         orders: state.orders.map(o =>
@@ -170,7 +188,8 @@ export const useOrdersStore = create<OrdersState>((set) => ({
       .channel('orders_channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload: any) => {
         const newOrder = payload.new as Order
-        callback(newOrder)
+        const eventType = payload.eventType || payload.type || 'INSERT'
+        callback(newOrder, eventType)
       })
       .subscribe()
 

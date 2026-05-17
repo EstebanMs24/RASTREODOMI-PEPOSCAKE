@@ -1,15 +1,31 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/config/supabase'
+import { Download } from 'lucide-react'
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts'
+import { exportAnalyticsExcel } from '@/utils/exportReports'
 
 export default function AnalyticsDashboard() {
   const [hourlyData, setHourlyData] = useState<any[]>([])
   const [delivererData, setDelivererData] = useState<any[]>([])
   const [statusData, setStatusData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [exporting, setExporting] = useState(false)
+
+  const handleExportAnalytics = async () => {
+    setExporting(true)
+    try {
+      exportAnalyticsExcel({
+        hourly: hourlyData,
+        status: statusData,
+        deliverers: delivererData,
+      })
+    } finally {
+      setExporting(false)
+    }
+  }
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -118,9 +134,19 @@ export default function AnalyticsDashboard() {
   return (
     <div className="space-y-6">
       {/* Title */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">📊 Analytics Avanzados</h1>
-        <p className="text-gray-600">Visualiza métricas y patrones de desempeño</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">📊 Analytics Avanzados</h1>
+          <p className="text-gray-600">Visualiza métricas y patrones de desempeño</p>
+        </div>
+        <button
+          onClick={handleExportAnalytics}
+          disabled={exporting}
+          className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 transition font-semibold"
+        >
+          <Download className="w-5 h-5" />
+          {exporting ? 'Descargando...' : '📊 Exportar Excel'}
+        </button>
       </div>
 
       {/* Charts Grid */}

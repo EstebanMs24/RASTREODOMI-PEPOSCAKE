@@ -1,10 +1,10 @@
-import { X, Map, Package, BarChart3, Users } from 'lucide-react'
+import { X, Map, Package, BarChart3, Users, FileText } from 'lucide-react'
 
 interface SidebarProps {
   isOpen: boolean
   onClose: () => void
-  activeTab: 'map' | 'orders' | 'stats' | 'deliverers' | 'reports' | 'analytics'
-  onTabChange: (tab: 'map' | 'orders' | 'stats' | 'deliverers' | 'reports' | 'analytics') => void
+  activeTab: 'map' | 'orders' | 'stats' | 'deliverers' | 'reports' | 'analytics' | 'audit'
+  onTabChange: (tab: 'map' | 'orders' | 'stats' | 'deliverers' | 'reports' | 'analytics' | 'audit') => void
 }
 
 export default function Sidebar({ isOpen, onClose, activeTab, onTabChange }: SidebarProps) {
@@ -15,9 +15,10 @@ export default function Sidebar({ isOpen, onClose, activeTab, onTabChange }: Sid
     { icon: BarChart3, label: 'Reportes', tab: 'reports' as const, emoji: '📈' },
     { icon: BarChart3, label: 'Analytics', tab: 'analytics' as const, emoji: '📉' },
     { icon: Users, label: 'Domiciliarios', tab: 'deliverers' as const, emoji: '👥' },
+    { icon: FileText, label: 'Auditoría', tab: 'audit' as const, emoji: '📋' },
   ]
 
-  const handleTabClick = (tab: 'map' | 'orders' | 'stats' | 'deliverers' | 'reports' | 'analytics') => {
+  const handleTabClick = (tab: 'map' | 'orders' | 'stats' | 'deliverers' | 'reports' | 'analytics' | 'audit') => {
     onTabChange(tab)
     onClose()
   }

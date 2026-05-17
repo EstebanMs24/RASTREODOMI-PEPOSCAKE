@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import { useAuthStore } from '@/stores/auth'
 import LoginPage from '@/pages/LoginPage'
 import AdminDashboard from '@/pages/AdminDashboard'
@@ -57,6 +58,7 @@ function App() {
   return (
     <BrowserRouter>
       {renderRoutes()}
+      <Toaster position="top-right" richColors expand={false} duration={4000} />
     </BrowserRouter>
   )
 }

@@ -19,7 +19,11 @@
       "mcp__claude_ai_Supabase__get_project",
       "Bash(npm run *)",
       "Bash(git commit -m ' *)",
-      "Bash(xargs grep -l \"Location\\\\|interface Location\")"
+      "Bash(xargs grep -l \"Location\\\\|interface Location\")",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(supabase functions *)",
+      "Bash(SUPABASE_ACCESS_TOKEN=\"sbp_ec8126795c1b13dec44eabb3c40cc99f98be2e84\" npx supabase functions deploy delete-deliverer)",
+      "Bash(git commit -m 'Fix: Resolve TypeScript errors in components and stores *)"
     ]
   }
 }
