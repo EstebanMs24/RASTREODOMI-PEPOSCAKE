@@ -1,17 +1,5 @@
 {
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
-  "outputDirectory": "dist",
-  "routes": [
-    {
-      "src": "/assets/.*",
-      "dest": "/assets/$1",
-      "status": 200
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html",
-      "status": 200
-    }
-  ]
+  "outputDirectory": "dist"
 }
