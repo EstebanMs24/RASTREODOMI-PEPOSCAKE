@@ -50,7 +50,17 @@ Deno.serve(async (req: Request) => {
 
     const userName = userData?.full_name || body.userId
 
-    // Delete user profile first (will cascade if RLS allows)
+    // Delete locations first (to avoid FK constraint violations)
+    const { error: locationsError } = await supabase
+      .from('locations')
+      .delete()
+      .eq('user_id', body.userId)
+
+    if (locationsError) {
+      console.error('Locations deletion error:', locationsError)
+    }
+
+    // Delete user profile
     const { error: profileError } = await supabase
       .from('users')
       .delete()
