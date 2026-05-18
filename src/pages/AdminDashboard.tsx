@@ -24,6 +24,7 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'map' | 'orders' | 'stats' | 'deliverers' | 'reports' | 'analytics' | 'audit'>('map')
   const [showFormDeliverer, setShowFormDeliverer] = useState(false)
+  const [deliverersRefresh, setDeliverersRefresh] = useState(0)
 
   useEffect(() => {
     fetchOrders()
@@ -169,12 +170,13 @@ export default function AdminDashboard() {
                   <AddDelivererForm onDelivererAdded={() => {
                     fetchOrders()
                     setShowFormDeliverer(false)
+                    setDeliverersRefresh(prev => prev + 1)
                   }} />
                 </div>
               )}
 
               {/* List */}
-              <DeliverersList />
+              <DeliverersList key={deliverersRefresh} />
             </div>
           )}
           {activeTab === 'audit' && <AuditLogView />}

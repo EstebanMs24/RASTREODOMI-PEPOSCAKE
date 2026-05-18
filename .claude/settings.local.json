@@ -23,7 +23,22 @@
       "Bash(curl -s http://localhost:5173)",
       "Bash(supabase functions *)",
       "Bash(SUPABASE_ACCESS_TOKEN=\"sbp_ec8126795c1b13dec44eabb3c40cc99f98be2e84\" npx supabase functions deploy delete-deliverer)",
-      "Bash(git commit -m 'Fix: Resolve TypeScript errors in components and stores *)"
+      "Bash(git commit -m 'Fix: Resolve TypeScript errors in components and stores *)",
+      "Bash(curl -s http://localhost:5176)",
+      "Bash(git push *)",
+      "mcp__claude_ai_Vercel__list_teams",
+      "mcp__claude_ai_Vercel__list_projects",
+      "mcp__claude_ai_Vercel__deploy_to_vercel",
+      "Bash(vercel --prod --confirm)",
+      "Bash(git commit -m 'Fix: Add vercel.json to handle React Router correctly *)",
+      "Bash(git commit -m 'Fix: Delete locations before deleting deliverer to prevent FK constraint violation *)",
+      "Bash(supabase --version)",
+      "Bash(git commit -m 'Fix: Improve vercel.json routing to avoid asset interference *)",
+      "Bash(git commit -m 'Fix: Simplify Vercel routing configuration for SPA *)",
+      "Bash(rm \"c:\\\\Users\\\\user\\\\Desktop\\\\Pruebas IA\\\\RASTREO-DOMIPEPOS\\\\public\\\\_redirects\")",
+      "Bash(git rm *)",
+      "Bash(git commit -m 'Fix: Use correct Vercel rewrites configuration for SPA *)",
+      "Bash(git commit -m 'Fix: Force DeliverersList refresh when new deliverer is added *)"
     ]
   }
 }
