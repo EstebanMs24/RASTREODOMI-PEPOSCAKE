@@ -126,14 +126,15 @@ export const useMapStore = create<MapState>((set) => {
                 last_update: newLocation.created_at,
               }
             } else {
+              const existingMarker = state.markers.find(m => m.user_id === newLocation.user_id)
               newMarkers.push({
                 id: newLocation.user_id,
                 user_id: newLocation.user_id,
-                user_name: 'Domiciliario',
+                user_name: existingMarker?.user_name || 'Domiciliario',
                 latitude: newLocation.latitude,
                 longitude: newLocation.longitude,
-                orders_count: 0,
-                status: 'active',
+                orders_count: existingMarker?.orders_count || 0,
+                status: existingMarker?.status || 'active',
                 last_update: newLocation.created_at,
               })
             }

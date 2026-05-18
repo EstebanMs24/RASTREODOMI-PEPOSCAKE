@@ -69,16 +69,19 @@ export default function MapView() {
         heatmapRef.current = null
       }
 
-      // Mostrar marcadores
+      // Mostrar marcadores (solo activos)
       const currentMarkerIds = new Set<string>()
+      const activeMarkers = markers.filter(m => m.status === 'active')
 
-      markers.forEach(marker => {
+      activeMarkers.forEach(marker => {
         currentMarkerIds.add(marker.id)
 
         const position = { lat: marker.latitude, lng: marker.longitude }
 
         if (markersRef.current.has(marker.id)) {
-          markersRef.current.get(marker.id).setPosition(position)
+          const existingMarker = markersRef.current.get(marker.id)
+          existingMarker.setPosition(position)
+          existingMarker.setVisible(true)
         } else {
           const newMarker = new window.google.maps.Marker({
             position,
@@ -114,16 +117,16 @@ export default function MapView() {
 
       markersRef.current.forEach((marker, id) => {
         if (!currentMarkerIds.has(id)) {
-          marker.setMap(null)
-          markersRef.current.delete(id)
+          marker.setVisible(false)
         }
       })
     }
 
     // Center map
-    if (markers.length > 0) {
+    const displayMarkers = heatmapActive ? markers : markers.filter(m => m.status === 'active')
+    if (displayMarkers.length > 0) {
       const bounds = new window.google.maps.LatLngBounds()
-      markers.forEach(m => {
+      displayMarkers.forEach(m => {
         bounds.extend({ lat: m.latitude, lng: m.longitude })
       })
       mapInstanceRef.current.fitBounds(bounds, 50)
@@ -180,7 +183,7 @@ export default function MapView() {
             )}
             <div className="ml-auto flex items-center gap-2">
               <MapPin className="w-4 h-4 text-primary-600" />
-              <span className="text-primary-700 font-semibold">{markers.length} domiciliarios</span>
+              <span className="text-primary-700 font-semibold">{markers.filter(m => m.status === 'active').length} domiciliarios activos</span>
             </div>
           </div>
         </div>
