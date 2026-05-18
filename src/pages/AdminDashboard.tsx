@@ -57,6 +57,7 @@ export default function AdminDashboard() {
 
     const statsInterval = setInterval(() => {
       fetchStats()
+      fetchLocations()
     }, 30000)
 
     return () => {
