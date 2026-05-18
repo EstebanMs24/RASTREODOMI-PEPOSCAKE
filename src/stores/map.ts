@@ -46,32 +46,39 @@ export const useMapStore = create<MapState>((set) => {
     fetchLocations: async () => {
       set({ loading: true, error: null })
       try {
-        const { data, error } = await supabase
-          .from('locations')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(1000)
-
-        if (error) throw error
-
-        const locationsMap = new Map<string, Location>()
-        const markers: DeliveryMarker[] = []
-        const userOrdersMap = new Map<string, number>()
-
-        data.forEach(loc => {
-          locationsMap.set(loc.id, loc)
-          if (!userOrdersMap.has(loc.user_id)) {
-            userOrdersMap.set(loc.user_id, 0)
-          }
-        })
-
-        const { data: usersData } = await supabase
+        const { data: usersData, error: usersError } = await supabase
           .from('users')
           .select('id, full_name, is_active')
           .eq('role', 'deliverer')
 
-        usersData?.forEach(user => {
-          const lastLoc = data.find(l => l.user_id === user.id)
+        if (usersError) throw usersError
+        if (!usersData || usersData.length === 0) {
+          set({ locations: new Map(), markers: [], loading: false })
+          return
+        }
+
+        const userIds = usersData.map(u => u.id)
+        const { data: locationsData, error: locationsError } = await supabase
+          .from('locations')
+          .select('*')
+          .in('user_id', userIds)
+          .order('created_at', { ascending: false })
+
+        if (locationsError) throw locationsError
+
+        const locationsMap = new Map<string, Location>()
+        const latestPerUser = new Map<string, Location>()
+        const markers: DeliveryMarker[] = []
+
+        locationsData?.forEach(loc => {
+          locationsMap.set(loc.id, loc)
+          if (!latestPerUser.has(loc.user_id)) {
+            latestPerUser.set(loc.user_id, loc)
+          }
+        })
+
+        usersData.forEach(user => {
+          const lastLoc = latestPerUser.get(user.id)
           if (lastLoc) {
             markers.push({
               id: user.id,
@@ -79,7 +86,7 @@ export const useMapStore = create<MapState>((set) => {
               user_name: user.full_name,
               latitude: lastLoc.latitude,
               longitude: lastLoc.longitude,
-              orders_count: userOrdersMap.get(user.id) || 0,
+              orders_count: 0,
               status: user.is_active ? 'active' : 'inactive',
               last_update: lastLoc.created_at,
             })
@@ -88,6 +95,7 @@ export const useMapStore = create<MapState>((set) => {
 
         set({ locations: locationsMap, markers, loading: false })
       } catch (error: any) {
+        console.error('fetchLocations error:', error)
         set({ error: error.message, loading: false })
       }
     },
@@ -101,12 +109,40 @@ export const useMapStore = create<MapState>((set) => {
           table: 'locations',
         }, (payload: any) => {
           const newLocation = payload.new as Location
-          callback(newLocation)
+
           set(state => {
             const newLocations = new Map(state.locations)
             newLocations.set(newLocation.id, newLocation)
-            return { locations: newLocations }
+
+            const newMarkers = state.markers.map(marker => {
+              if (marker.user_id === newLocation.user_id) {
+                return {
+                  ...marker,
+                  latitude: newLocation.latitude,
+                  longitude: newLocation.longitude,
+                  last_update: newLocation.created_at,
+                }
+              }
+              return marker
+            })
+
+            if (!newMarkers.some(m => m.user_id === newLocation.user_id)) {
+              newMarkers.push({
+                id: newLocation.user_id,
+                user_id: newLocation.user_id,
+                user_name: 'Domiciliario',
+                latitude: newLocation.latitude,
+                longitude: newLocation.longitude,
+                orders_count: 0,
+                status: 'active',
+                last_update: newLocation.created_at,
+              })
+            }
+
+            return { locations: newLocations, markers: newMarkers }
           })
+
+          callback(newLocation)
         })
         .subscribe()
 
