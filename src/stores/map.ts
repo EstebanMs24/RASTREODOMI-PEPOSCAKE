@@ -109,24 +109,23 @@ export const useMapStore = create<MapState>((set) => {
           table: 'locations',
         }, (payload: any) => {
           const newLocation = payload.new as Location
+          callback(newLocation)
 
           set(state => {
             const newLocations = new Map(state.locations)
             newLocations.set(newLocation.id, newLocation)
 
-            const newMarkers = state.markers.map(marker => {
-              if (marker.user_id === newLocation.user_id) {
-                return {
-                  ...marker,
-                  latitude: newLocation.latitude,
-                  longitude: newLocation.longitude,
-                  last_update: newLocation.created_at,
-                }
-              }
-              return marker
-            })
+            let newMarkers = [...state.markers]
+            const existingMarkerIndex = newMarkers.findIndex(m => m.user_id === newLocation.user_id)
 
-            if (!newMarkers.some(m => m.user_id === newLocation.user_id)) {
+            if (existingMarkerIndex >= 0) {
+              newMarkers[existingMarkerIndex] = {
+                ...newMarkers[existingMarkerIndex],
+                latitude: newLocation.latitude,
+                longitude: newLocation.longitude,
+                last_update: newLocation.created_at,
+              }
+            } else {
               newMarkers.push({
                 id: newLocation.user_id,
                 user_id: newLocation.user_id,
@@ -141,8 +140,6 @@ export const useMapStore = create<MapState>((set) => {
 
             return { locations: newLocations, markers: newMarkers }
           })
-
-          callback(newLocation)
         })
         .subscribe()
 
