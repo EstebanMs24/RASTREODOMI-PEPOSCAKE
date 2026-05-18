@@ -98,43 +98,67 @@ CREATE TABLE performance_metrics (
 CREATE INDEX idx_performance_metrics_user_id ON performance_metrics(user_id);
 CREATE INDEX idx_performance_metrics_date ON performance_metrics(date DESC);
 
--- Row Level Security Policies
+-- Audit logs table for tracking changes
+CREATE TABLE audit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  action TEXT NOT NULL,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT,
+  entity_name TEXT,
+  performed_by UUID,
+  performed_by_name TEXT,
+  old_value TEXT,
+  new_value TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- Enable RLS
+CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at DESC);
+CREATE INDEX idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
+
+-- ============================================================================
+-- HELPER FUNCTIONS
+-- ============================================================================
+
+-- Reusable function to check if current user is admin
+-- This avoids repeating the subquery in every RLS policy
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS boolean AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+COMMENT ON FUNCTION is_admin() IS 'Check if the current authenticated user has admin role. Used in RLS policies.';
+
+-- ============================================================================
+-- ROW LEVEL SECURITY POLICIES
+-- ============================================================================
+
+-- Enable RLS on all tables
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE locations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE incidents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE performance_metrics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- Users policies
 CREATE POLICY "Users can view their own profile" ON users
   FOR SELECT USING (auth.uid() = id);
 
 CREATE POLICY "Admin can view all users" ON users
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  FOR SELECT USING (is_admin());
 
 CREATE POLICY "Users can update their own profile" ON users
   FOR UPDATE USING (auth.uid() = id);
 
 CREATE POLICY "Admin can update any user" ON users
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  FOR UPDATE USING (is_admin());
 
 -- Orders policies
 CREATE POLICY "Admin can view all orders" ON orders
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  FOR SELECT USING (is_admin());
 
 CREATE POLICY "Deliverers can view their assigned orders" ON orders
   FOR SELECT USING (
@@ -145,40 +169,27 @@ CREATE POLICY "Deliverers can view their assigned orders" ON orders
   );
 
 CREATE POLICY "Admin can create orders" ON orders
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  FOR INSERT WITH CHECK (is_admin());
 
 CREATE POLICY "Admin can update orders" ON orders
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  FOR UPDATE USING (is_admin());
 
 CREATE POLICY "Deliverers can update their assigned orders status" ON orders
-  FOR UPDATE USING (
-    assigned_to = auth.uid()
-  )
-  WITH CHECK (
-    assigned_to = auth.uid()
-  );
+  FOR UPDATE USING (assigned_to = auth.uid())
+  WITH CHECK (assigned_to = auth.uid());
 
 -- Locations policies
 CREATE POLICY "Users can insert their own locations" ON locations
   FOR INSERT WITH CHECK (user_id = auth.uid());
 
 CREATE POLICY "Admin can view all locations" ON locations
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  FOR SELECT USING (is_admin());
 
 CREATE POLICY "Users can view their own locations" ON locations
   FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "Service can delete old locations" ON locations
+  FOR DELETE USING (true);
 
 -- Incidents policies
 CREATE POLICY "Users can create incidents for their orders" ON incidents
@@ -190,26 +201,31 @@ CREATE POLICY "Users can create incidents for their orders" ON incidents
   );
 
 CREATE POLICY "Admin can view all incidents" ON incidents
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  FOR SELECT USING (is_admin());
 
 CREATE POLICY "Users can view incidents they reported" ON incidents
   FOR SELECT USING (reported_by = auth.uid());
 
 -- Performance metrics policies
 CREATE POLICY "Admin can view all metrics" ON performance_metrics
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  FOR SELECT USING (is_admin());
 
 CREATE POLICY "Users can view their own metrics" ON performance_metrics
   FOR SELECT USING (user_id = auth.uid());
 
--- Cleanup job: Delete locations older than 7 days
--- Run manually or via pg_cron extension
--- SELECT cron.schedule('cleanup_old_locations', '0 2 * * *', 'DELETE FROM locations WHERE created_at < NOW() - INTERVAL ''7 days''');
+-- Audit logs policies
+CREATE POLICY "Admin can view audit logs" ON audit_logs
+  FOR SELECT USING (is_admin());
+
+CREATE POLICY "System can insert audit logs" ON audit_logs
+  FOR INSERT WITH CHECK (true);
+
+-- ============================================================================
+-- SCHEDULED JOBS (requires pg_cron extension enabled in Supabase Dashboard)
+-- ============================================================================
+
+-- Delete locations older than 7 days to maintain database performance
+-- Schedule: Every day at 2:00 AM UTC
+-- IMPORTANT: Enable pg_cron extension in Supabase Dashboard > Database > Extensions
+-- Then uncomment and run:
+-- SELECT cron.schedule('cleanup_old_locations', '0 2 * * *', $$DELETE FROM locations WHERE created_at < NOW() - INTERVAL '7 days'$$);

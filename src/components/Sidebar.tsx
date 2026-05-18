@@ -1,4 +1,5 @@
 import { X, Map, Package, BarChart3, Users, FileText } from 'lucide-react'
+import ConnectionIndicator from './ConnectionIndicator'
 
 interface SidebarProps {
   isOpen: boolean
@@ -79,7 +80,10 @@ export default function Sidebar({ isOpen, onClose, activeTab, onTabChange }: Sid
         </nav>
 
         {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700 bg-gradient-to-t from-pepos-navy to-transparent">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700 bg-gradient-to-t from-pepos-navy to-transparent space-y-3">
+          <div className="flex justify-center">
+            <ConnectionIndicator />
+          </div>
           <p className="text-xs text-gray-400 text-center font-medium">
             ✨ Gestión de Entregas<br/>en Tiempo Real
           </p>

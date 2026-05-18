@@ -1,19 +1,30 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth'
-import { Mail, Lock } from 'lucide-react'
+import { Mail, Lock, Loader } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const { login, loading, error } = useAuthStore()
+  const { login, loading, error, clearError } = useAuthStore()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [userType, setUserType] = useState<'admin' | 'deliverer'>('admin')
+  const [loginSuccess, setLoginSuccess] = useState(false)
 
   useEffect(() => {
     setIsSubmitting(false)
   }, [])
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error)
+      setPassword('')
+      setIsSubmitting(false)
+      clearError()
+    }
+  }, [error, clearError])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,11 +34,17 @@ export default function LoginPage() {
     try {
       await login(email, password)
       const user = useAuthStore.getState().user
-      if (user?.role === 'admin') {
-        navigate('/admin')
-      } else {
-        navigate('/deliverer')
-      }
+
+      setLoginSuccess(true)
+      toast.success('✓ Sesión iniciada correctamente')
+
+      setTimeout(() => {
+        if (user?.role === 'admin') {
+          navigate('/admin')
+        } else {
+          navigate('/deliverer')
+        }
+      }, 500)
     } catch (err) {
       console.error('Login error:', err)
       setIsSubmitting(false)
@@ -132,18 +149,28 @@ export default function LoginPage() {
               )}
             </div>
 
-            {error && (
-              <div className="p-4 bg-danger-50 border-2 border-danger-200 rounded-lg text-danger-700 text-sm font-medium">
-                ⚠️ {error}
-              </div>
-            )}
-
             <button
               type="submit"
-              disabled={loading || isSubmitting}
-              className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-3 rounded-lg font-bold shadow-lg hover:shadow-xl hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
+              disabled={loading || isSubmitting || loginSuccess}
+              className={`w-full py-3 rounded-lg font-bold shadow-lg transition duration-200 flex items-center justify-center gap-2 ${
+                loginSuccess
+                  ? 'bg-green-500 text-white hover:bg-green-600'
+                  : 'bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:shadow-xl hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 disabled:cursor-not-allowed'
+              }`}
             >
-              {loading || isSubmitting ? '⏳ Iniciando sesión...' : '✓ Iniciar Sesión'}
+              {loading || isSubmitting ? (
+                <>
+                  <Loader className="w-5 h-5 animate-spin" />
+                  Iniciando sesión...
+                </>
+              ) : loginSuccess ? (
+                <>
+                  <span className="text-xl">✓</span>
+                  Sesión iniciada
+                </>
+              ) : (
+                '✓ Iniciar Sesión'
+              )}
             </button>
           </form>
 
