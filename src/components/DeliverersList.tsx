@@ -95,8 +95,12 @@ export default function DeliverersList() {
       )
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Error al eliminar domiciliario')
+        try {
+          const errorData = await response.json()
+          throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`)
+        } catch {
+          throw new Error(`Error ${response.status}: ${response.statusText}`)
+        }
       }
 
       setDeliverers((prev) => prev.filter((d) => d.id !== id))

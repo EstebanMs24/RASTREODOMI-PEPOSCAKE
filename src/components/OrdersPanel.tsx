@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import { useOrdersStore } from '@/stores/orders'
+import { supabase } from '@/config/supabase'
 import { Order } from '@/types'
 import { Clock, MapPin, Phone, Edit, Plus } from 'lucide-react'
+import { toast } from 'sonner'
+import AssignOrderModal from './AssignOrderModal'
 
 export default function OrdersPanel() {
   const { orders, loading, createOrder } = useOrdersStore()
   const [showForm, setShowForm] = useState(false)
+  const [selectedOrderForAssign, setSelectedOrderForAssign] = useState<Order | null>(null)
   const [formData, setFormData] = useState({
     customer_name: '',
     customer_phone: '',
@@ -33,6 +37,21 @@ export default function OrdersPanel() {
       total_amount: 0,
       notes: '',
     })
+  }
+
+  const handleAssignOrder = async (orderId: string, delivererId: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ assigned_to: delivererId, status: 'assigned' })
+        .eq('id', orderId)
+
+      if (error) throw error
+
+      toast.success('✓ Pedido asignado correctamente')
+    } catch (err: any) {
+      toast.error(err.message || 'Error al asignar pedido')
+    }
   }
 
   const getStatusColor = (status: Order['status']) => {
@@ -193,7 +212,10 @@ export default function OrdersPanel() {
                 ${order.total_amount.toFixed(2)}
               </span>
               {!order.assigned_to && order.status === 'pending' && (
-                <button className="flex items-center gap-2 btn-secondary text-xs py-1 px-3">
+                <button
+                  onClick={() => setSelectedOrderForAssign(order)}
+                  className="flex items-center gap-2 btn-secondary text-xs py-1 px-3"
+                >
                   <Edit className="w-3 h-3" />
                   Asignar
                 </button>
@@ -202,6 +224,13 @@ export default function OrdersPanel() {
           </div>
         ))}
       </div>
+
+      <AssignOrderModal
+        order={selectedOrderForAssign!}
+        isOpen={selectedOrderForAssign !== null}
+        onClose={() => setSelectedOrderForAssign(null)}
+        onAssign={handleAssignOrder}
+      />
     </div>
   )
 }
