@@ -77,9 +77,15 @@ export const useMapStore = create<MapState>((set) => {
           }
         })
 
+        const now = new Date()
+        const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000)
+
         usersData.forEach(user => {
           const lastLoc = latestPerUser.get(user.id)
           if (lastLoc) {
+            const lastUpdateTime = new Date(lastLoc.created_at)
+            const isRecentLocation = lastUpdateTime > fiveMinutesAgo
+
             markers.push({
               id: user.id,
               user_id: user.id,
@@ -87,7 +93,7 @@ export const useMapStore = create<MapState>((set) => {
               latitude: lastLoc.latitude,
               longitude: lastLoc.longitude,
               orders_count: 0,
-              status: user.is_active ? 'active' : 'inactive',
+              status: isRecentLocation ? 'active' : 'inactive',
               last_update: lastLoc.created_at,
             })
           }
@@ -115,6 +121,10 @@ export const useMapStore = create<MapState>((set) => {
             const newLocations = new Map(state.locations)
             newLocations.set(newLocation.id, newLocation)
 
+            const now = new Date()
+            const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000)
+            const isRecentLocation = new Date(newLocation.created_at) > fiveMinutesAgo
+
             let newMarkers = [...state.markers]
             const existingMarkerIndex = newMarkers.findIndex(m => m.user_id === newLocation.user_id)
 
@@ -123,6 +133,7 @@ export const useMapStore = create<MapState>((set) => {
                 ...newMarkers[existingMarkerIndex],
                 latitude: newLocation.latitude,
                 longitude: newLocation.longitude,
+                status: isRecentLocation ? 'active' : 'inactive',
                 last_update: newLocation.created_at,
               }
             } else {
@@ -134,7 +145,7 @@ export const useMapStore = create<MapState>((set) => {
                 latitude: newLocation.latitude,
                 longitude: newLocation.longitude,
                 orders_count: existingMarker?.orders_count || 0,
-                status: existingMarker?.status || 'active',
+                status: isRecentLocation ? 'active' : 'inactive',
                 last_update: newLocation.created_at,
               })
             }
