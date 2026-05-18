@@ -27,7 +27,7 @@ export default function PerformanceReports() {
       const peakHour = analytics.hourlyActivity.length > 0
         ? `${analytics.hourlyActivity.reduce((max, h) => h.count > max.count ? h : max).hour}:00`
         : 'N/A'
-      exportPerformancePDF(
+      await exportPerformancePDF(
         deliverer?.full_name || 'Domiciliario',
         periodLabel,
         {
@@ -53,7 +53,7 @@ export default function PerformanceReports() {
       const peakHour = analytics.hourlyActivity.length > 0
         ? `${analytics.hourlyActivity.reduce((max, h) => h.count > max.count ? h : max).hour}:00`
         : 'N/A'
-      exportPerformanceExcel(
+      await exportPerformanceExcel(
         deliverer?.full_name || 'Domiciliario',
         periodLabel,
         {

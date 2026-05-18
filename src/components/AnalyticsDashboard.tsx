@@ -17,7 +17,7 @@ export default function AnalyticsDashboard() {
   const handleExportAnalytics = async () => {
     setExporting(true)
     try {
-      exportAnalyticsExcel({
+      await exportAnalyticsExcel({
         hourly: hourlyData,
         status: statusData,
         deliverers: delivererData,
